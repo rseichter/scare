@@ -1,0 +1,31 @@
+# https://taskfile.dev
+# vim: ft=yaml ts=2 sw=2 et
+# Copyright © 2026 Ralph Seichter
+---
+version: '3'
+
+vars:
+  BIN: bin/scare
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  fmt:
+    desc: Format project files.
+    cmds:
+      - go fmt
+
+  build:
+    desc: Build project.
+    cmds:
+      - go build -o {{.BIN}}
+
+  clean:
+    desc: Cleanup project directory.
+    cmds:
+      - go clean
+      - rm -f {{.BIN}}
+    silent: true
