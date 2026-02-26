@@ -4,13 +4,10 @@
 ---
 version: '3'
 
-vars:
-  BIN: bin/scare
-
 tasks:
   default:
     cmds:
-      - task --list
+      - task -l
     silent: true
 
   fmt:
@@ -22,17 +19,15 @@ tasks:
     deps: [fmt]
     desc: Build project.
     cmds:
-      - go build -o {{.BIN}}
+      - go build -o scare
 
   install:
     deps: [build]
     desc: Install binary.
     cmds:
-      - sudo install -m 0755 {{.BIN}} /usr/local/bin/scare
+      - sudo install -C scare /usr/local/bin/scare
 
   clean:
     desc: Cleanup project directory.
     cmds:
       - go clean
-      - rm -f {{.BIN}}
-    silent: true
