@@ -6,6 +6,10 @@ automatically and recursively identify all suitable files in the current
 directory and have them checked, linted, and/or formatted for you. `scare -h`
 will display the list of supported options.
 
+Copyright © 2026 Ralph Seichter
+
+## Purpose
+
 _scare_ is opinionated, meaning it will deliberately choose particular
 behaviour instead of letting the user pick their own. This improves
 convenience. Users who crave more flexibility can simply use the underlying
@@ -16,4 +20,13 @@ third party utilities to be available via your shell's PATH configuration.
 * Python: [Black](https://black.readthedocs.io/), [Flake8](https://flake8.pycqa.org/).
 * YAML: [yamllint](https://yamllint.readthedocs.io/)
 
-Copyright © 2026 Ralph Seichter
+## Installation
+
+As a prerequisite, [Go](https://go.dev/) version 1.20 or later needs to be
+available on your machine. You can then use the following command to install
+the latest version of _scare_ using your shell. You may replace `latest` with a
+specific commit hash or release name like `v0.2`.
+
+```bash
+go install github.com/rseichter/scare@latest
+```
