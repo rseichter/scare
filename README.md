@@ -17,13 +17,13 @@ convenience. Users who crave more flexibility can simply use the underlying
 external tools directly. Depending on file type, _scare_ needs the following
 third party utilities to be available via your shell's PATH configuration.
 
-* Bash: [shellcheck](https://www.shellcheck.net/), [shfmt](https://github.com/mvdan/sh).
+* Bash & POSIX shells: [shellcheck](https://www.shellcheck.net/), [shfmt](https://github.com/mvdan/sh).
 * Python: [Black](https://black.readthedocs.io/), [Flake8](https://flake8.pycqa.org/).
 * YAML: [yamllint](https://yamllint.readthedocs.io/)
 
 ## Installation
 
-[Go](https://go.dev/) version 1.22 or later needs to be available on your
+[Go](https://go.dev/) version 1.21 or later needs to be available on your
 machine. The details of installing Go depend on your operating system, and are
 outside the scope of this document.
 
