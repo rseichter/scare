@@ -17,7 +17,7 @@ import (
 
 const (
 	program = "scare"
-	version = "0.3.dev1"
+	version = "0.3"
 )
 
 type ftype int
@@ -87,7 +87,7 @@ func careFor(path string, ft ftype) error {
 			if err != nil {
 				return err
 			} else if rc != 0 && failFast {
-				return errors.New("")
+				return errors.New("Fail-fast requested, exiting.")
 			}
 		}
 	}
