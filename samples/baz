@@ -1,0 +1,3 @@
+#!/bin/sh
+
+echo Oldschool POSIX shell shebang
