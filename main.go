@@ -1,3 +1,4 @@
+// Copyright © 2026 Ralph Seichter
 package main
 
 import (
@@ -10,32 +11,37 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 )
 
+const (
+	program = "scare"
+	version = "0.3.dev1"
+)
+
+type ftype int
+
+const (
+	ftDunno ftype = iota
+	ftBash
+	ftGo
+	ftPosixSh
+	ftPython
+	ftYaml
+)
+
 var (
-	failFast bool
-	fileType string
-	verbose  bool
+	failFast       bool
+	forcedFileType string
+	verbose        bool
 )
 
 func init() {
 	flag.BoolVar(&failFast, "f", false, "fail fast at first reported issue")
 	flag.BoolVar(&verbose, "v", false, "verbose output")
-	flag.StringVar(&fileType, "t", "auto", "file type")
+	flag.StringVar(&forcedFileType, "t", "auto", "file type")
 }
-
-type Filetype int
-
-const (
-	Bash Filetype = iota
-	Go
-	Python
-	Yaml
-	Unknown = -1
-	Prog    = "scare"
-	Version = "0.2"
-)
 
 func runCmd(cmd *exec.Cmd) (error, int) {
 	cmd.Stderr = os.Stderr
@@ -58,18 +64,21 @@ func runCmd(cmd *exec.Cmd) (error, int) {
 	return err, 0
 }
 
-func careFor(path string, ft Filetype) error {
+func careFor(path string, ft ftype) error {
 	cmds := make([]*exec.Cmd, 2)
 	switch ft {
-	case Bash:
+	case ftBash:
 		cmds = append(cmds, exec.Command("shellcheck", "-s", "bash", path))
 		cmds = append(cmds, exec.Command("shfmt", "-ln", "bash", "-s", "-w", path))
-	case Go:
+	case ftGo:
 		cmds = append(cmds, exec.Command("go", "fmt", path))
-	case Python:
+	case ftPosixSh:
+		cmds = append(cmds, exec.Command("shellcheck", "-s", "sh", path))
+		cmds = append(cmds, exec.Command("shfmt", "-ln", "posix", "-s", "-w", path))
+	case ftPython:
 		cmds = append(cmds, exec.Command("flake8", path))
 		cmds = append(cmds, exec.Command("black", path))
-	case Yaml:
+	case ftYaml:
 		cmds = append(cmds, exec.Command("yamllint", path))
 	}
 	for _, cmd := range cmds {
@@ -86,51 +95,63 @@ func careFor(path string, ft Filetype) error {
 }
 
 var (
-	reBash   = regexp.MustCompile("#!/.+bash")
-	rePython = regexp.MustCompile("#!/.+python")
-	reYaml   = regexp.MustCompile("ya?ml$")
-	ftMap    = map[string]Filetype{
-		"bash":   Bash,
-		"py":     Python,
-		"python": Python,
-		"sh":     Bash,
-		"yaml":   Yaml,
-		"yml":    Yaml,
+	reBash    = regexp.MustCompile("#!/.+bash")
+	rePosixSh = regexp.MustCompile("#!/.+[ /]sh")
+	rePython  = regexp.MustCompile("#!/.+python")
+	reYaml    = regexp.MustCompile("ya?ml$")
+	ftMap     = map[string]ftype{
+		"bash":   ftBash,
+		"py":     ftPython,
+		"python": ftPython,
+		"sh":     ftPosixSh,
+		"yaml":   ftYaml,
+		"yml":    ftYaml,
 	}
 )
 
-func determineFiletype(path string) (Filetype, error) {
-	if ft, found := ftMap[fileType]; found {
+func ftChoices(m map[string]ftype) string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+	return strings.Join(keys, ", ")
+}
+
+func determineFiletype(path string) (ftype, error) {
+	if ft, found := ftMap[forcedFileType]; found {
 		return ft, nil
-	} else if fileType != "auto" {
-		return Unknown, fmt.Errorf("Unsupported file type %q", fileType)
+	} else if forcedFileType != "auto" {
+		return ftDunno, fmt.Errorf("Unsupported file type %q (valid choices: %s)", forcedFileType, ftChoices(ftMap))
 	}
 	ext := filepath.Ext(path)
 	if strings.EqualFold(".sh", ext) {
-		return Bash, nil
+		return ftBash, nil
 	} else if strings.EqualFold(".go", ext) {
-		return Go, nil
+		return ftGo, nil
 	} else if strings.EqualFold(".py", ext) {
-		return Python, nil
+		return ftPython, nil
 	} else if nil != reYaml.FindStringIndex(ext) {
-		return Yaml, nil
+		return ftYaml, nil
 	}
 	// Shebang check
 	file, err := os.Open(path)
 	if err != nil {
-		return Unknown, err
+		return ftDunno, err
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	if scanner.Scan() {
 		line := scanner.Text()
 		if nil != reBash.FindStringIndex(line) {
-			return Bash, nil
+			return ftBash, nil
+		} else if nil != rePosixSh.FindStringIndex(line) {
+			return ftPosixSh, nil
 		} else if nil != rePython.FindStringIndex(line) {
-			return Python, nil
+			return ftPython, nil
 		}
 	}
-	return Unknown, nil
+	return ftDunno, nil
 }
 
 func walkDirFunc(path string, entry fs.DirEntry, err error) error {
@@ -155,9 +176,9 @@ func walkDirFunc(path string, entry fs.DirEntry, err error) error {
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags] {path} [path ...]\n", Prog)
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags] {path} [path ...]\n", program)
 		flag.PrintDefaults()
-		fmt.Fprintf(flag.CommandLine.Output(), "%s %s Copyright © 2026 Ralph Seichter\n", Prog, Version)
+		fmt.Fprintf(flag.CommandLine.Output(), "%s %s Copyright © 2026 Ralph Seichter\n", program, version)
 	}
 	flag.Parse()
 	if flag.NArg() < 1 {

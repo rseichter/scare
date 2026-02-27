@@ -22,7 +22,7 @@ third party utilities to be available via your shell's PATH configuration.
 
 ## Installation
 
-As a prerequisite, [Go](https://go.dev/) version 1.20 or later needs to be
+As a prerequisite, [Go](https://go.dev/) version 1.22 or later needs to be
 available on your machine. You can then use the following command to install
 the latest version of _scare_ using your shell. You may replace `latest` with a
 specific commit hash or release name like `v0.2`.
