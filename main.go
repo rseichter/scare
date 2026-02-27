@@ -32,28 +32,28 @@ const (
 )
 
 var (
-	failFast       bool
-	forcedFileType string
-	verbose        bool
+	failFast   bool
+	forcedType string
+	quiet      bool
 )
 
 func init() {
-	flag.BoolVar(&failFast, "f", false, "fail fast at first reported issue")
-	flag.BoolVar(&verbose, "v", false, "verbose output")
-	flag.StringVar(&forcedFileType, "t", "auto", "file type")
+	flag.BoolVar(&failFast, "f", false, "Fail fast, stop at first reported issue.")
+	flag.BoolVar(&quiet, "q", false, "Quieter operation, reduced output.")
+	flag.StringVar(&forcedType, "t", "auto", "File type.")
 }
 
 func runCmd(cmd *exec.Cmd) (error, int) {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
-	if verbose {
+	if !quiet {
 		fmt.Printf("» %s\n", strings.Join(cmd.Args, " "))
 	}
 	err := cmd.Run()
 	if err != nil {
 		if e, ok := err.(*exec.ExitError); ok {
 			code := e.ExitCode()
-			if verbose {
+			if !quiet {
 				fmt.Printf("⚠️ %s returned code %v\n", strings.Join(cmd.Args, " "), code)
 			}
 			return nil, code
@@ -119,10 +119,10 @@ func ftChoices(m map[string]ftype) string {
 }
 
 func determineFiletype(path string) (ftype, error) {
-	if ft, found := ftMap[forcedFileType]; found {
+	if ft, found := ftMap[forcedType]; found {
 		return ft, nil
-	} else if forcedFileType != "auto" {
-		return ftDunno, fmt.Errorf("Unsupported file type %q (valid choices: %s)", forcedFileType, ftChoices(ftMap))
+	} else if forcedType != "auto" {
+		return ftDunno, fmt.Errorf("Unsupported file type %q (valid choices: %s)", forcedType, ftChoices(ftMap))
 	}
 	ext := filepath.Ext(path)
 	if strings.EqualFold(".sh", ext) {
@@ -178,7 +178,7 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags] {path} [path ...]\n", program)
 		flag.PrintDefaults()
-		fmt.Fprintf(flag.CommandLine.Output(), "%s %s Copyright © 2026 Ralph Seichter\n", program, version)
+		fmt.Fprintf(flag.CommandLine.Output(), "\n%s %s Copyright © 2026 Ralph Seichter\n", program, version)
 	}
 	flag.Parse()
 	if flag.NArg() < 1 {
