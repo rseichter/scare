@@ -17,7 +17,7 @@ import (
 
 const (
 	program = "scare"
-	version = "0.4.dev2"
+	version = "0.4"
 )
 
 type ftype int
