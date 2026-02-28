@@ -10,6 +10,15 @@ tasks:
       - task -l
     silent: true
 
+  usage:
+    desc: Generate usage description.
+    cmds:
+      - echo > {{.U}} '```bash'
+      - ./scare >> {{.U}} -h 2>&1
+      - echo >> {{.U}} '```'
+    vars:
+      U: USAGE.md
+
   fmt:
     desc: Format project files.
     cmds:

@@ -5,7 +5,8 @@ shellcheck or yamllint? _scare_ can do it for you.
 
 Just execute `scare .` to automatically and recursively identify all suitable
 files in the current directory and have them checked, linted, and/or formatted
-for you. `scare -h` will display the list of supported options.
+for you. `scare -h` will display the list of supported options, as shown
+[here](USAGE.md).
 
 Copyright © 2026 Ralph Seichter
 
