@@ -36,5 +36,17 @@ replace `latest` with a Git tag or commit hash.
 go install github.com/rseichter/scare@latest
 
 # Alternative: Install a specific version
-# go install github.com/rseichter/scare@v0.3
+# go install github.com/rseichter/scare@v0.4
 ```
+
+## Behaviour
+
+_scare_ expects one or more file system paths as arguments, which will be
+processed in order. If a given path represents a directory, _scare_ will
+process the contents recursively, unless the maximum configured depth limit is
+reached.
+
+Use the `-r {depth}` option to specify a recursion limit. Note that "depth" is
+determined by counting the number of OS-specific path separators. For example,
+`dir/subdir/subsubdir` has a depth of 2 on Unix-like systems.`-r 0` disables
+recursion.

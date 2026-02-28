@@ -17,7 +17,7 @@ import (
 
 const (
 	program = "scare"
-	version = "0.4.dev1"
+	version = "0.4.dev2"
 )
 
 type ftype int
@@ -34,12 +34,14 @@ const (
 var (
 	failFast   bool
 	forcedType string
+	maxDepth   int
 	quiet      bool
 )
 
 func init() {
 	flag.BoolVar(&failFast, "f", false, "Fail fast, stop at first reported issue.")
 	flag.BoolVar(&quiet, "q", false, "Quieter operation, reduced output.")
+	flag.IntVar(&maxDepth, "r", 2, "Recursion depth limit.")
 	flag.StringVar(&forcedType, "t", "auto", "File type.")
 }
 
@@ -157,6 +159,9 @@ func determineFiletype(path string) (ftype, error) {
 func walkDirFunc(path string, entry fs.DirEntry, err error) error {
 	if err != nil {
 		return err
+	} else if n := strings.Count(path, string(os.PathSeparator)); entry.IsDir() && n >= maxDepth {
+		fmt.Fprintf(os.Stderr, "⛔ Maximum depth %d reached, skipping %q\n", maxDepth, path)
+		return filepath.SkipDir
 	} else if entry.IsDir() && entry.Name() == ".git" {
 		return filepath.SkipDir
 	} else if strings.HasPrefix(entry.Name(), ".git") {
@@ -186,7 +191,9 @@ func main() {
 		os.Exit(1)
 	}
 	for _, arg := range flag.Args() {
-		if err := filepath.WalkDir(arg, walkDirFunc); err != nil {
+		// Trailing path separators interfere with depth counting
+		a := strings.TrimRight(arg, string(os.PathSeparator))
+		if err := filepath.WalkDir(a, walkDirFunc); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
