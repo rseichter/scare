@@ -36,11 +36,13 @@ var (
 	forcedType string
 	maxDepth   int
 	quiet      bool
+	verPrint   bool
 )
 
 func init() {
 	flag.BoolVar(&failFast, "f", false, "Fail fast, stop at first reported issue.")
 	flag.BoolVar(&quiet, "q", false, "Quieter operation, reduced output.")
+	flag.BoolVar(&verPrint, "V", false, "Print version number and exit.")
 	flag.IntVar(&maxDepth, "r", 2, "Recursion depth limit.")
 	flag.StringVar(&forcedType, "t", "auto", "File type.")
 }
@@ -188,16 +190,19 @@ func main() {
 		fmt.Fprintf(flag.CommandLine.Output(), "\n%s %s Copyright © 2026 Ralph Seichter\n", program, version)
 	}
 	flag.Parse()
-	if flag.NArg() < 1 {
+	if verPrint {
+		fmt.Fprintln(flag.CommandLine.Output(), version)
+	} else if flag.NArg() < 1 {
 		flag.Usage()
 		os.Exit(1)
-	}
-	for _, arg := range flag.Args() {
-		// Trailing path separators interfere with depth counting
-		a := strings.TrimRight(arg, string(os.PathSeparator))
-		if err := filepath.WalkDir(a, walkDirFunc); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+	} else {
+		for _, arg := range flag.Args() {
+			// Trailing path separators interfere with depth counting
+			a := strings.TrimRight(arg, string(os.PathSeparator))
+			if err := filepath.WalkDir(a, walkDirFunc); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
 		}
 	}
 }
