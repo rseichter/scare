@@ -17,7 +17,7 @@ import (
 
 const (
 	program = "scare"
-	version = "0.4"
+	version = "0.5.dev1"
 )
 
 type ftype int
@@ -160,7 +160,9 @@ func walkDirFunc(path string, entry fs.DirEntry, err error) error {
 	if err != nil {
 		return err
 	} else if n := strings.Count(path, string(os.PathSeparator)); entry.IsDir() && n >= maxDepth {
-		fmt.Fprintf(os.Stderr, "⛔ Maximum depth %d reached, skipping %q\n", maxDepth, path)
+		if !quiet {
+			fmt.Fprintf(os.Stderr, "⛔ Maximum depth %d reached, skipping %q\n", maxDepth, path)
+		}
 		return filepath.SkipDir
 	} else if entry.IsDir() && entry.Name() == ".git" {
 		return filepath.SkipDir
