@@ -42,7 +42,7 @@ var (
 func init() {
 	flag.BoolVar(&failFast, "f", false, "Fail fast, stop at first reported issue.")
 	flag.BoolVar(&quiet, "q", false, "Quieter operation, reduced output.")
-	flag.BoolVar(&verPrint, "V", false, "Print version number and exit.")
+	flag.BoolVar(&verPrint, "V", false, "Print version number to stdout.")
 	flag.IntVar(&maxDepth, "r", 2, "Recursion depth limit.")
 	flag.StringVar(&forcedType, "t", "auto", "File type.")
 }
@@ -191,10 +191,9 @@ func main() {
 	}
 	flag.Parse()
 	if verPrint {
-		fmt.Fprintln(flag.CommandLine.Output(), version)
+		fmt.Println(version)
 	} else if flag.NArg() < 1 {
 		flag.Usage()
-		os.Exit(1)
 	} else {
 		for _, arg := range flag.Args() {
 			// Trailing path separators interfere with depth counting
