@@ -31,18 +31,18 @@ const (
 	ftYaml
 )
 
-func runCmd(cmd *exec.Cmd) (error, int) {
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
+func runCmd(c *exec.Cmd) (error, int) {
+	c.Stderr = os.Stderr
+	c.Stdout = os.Stdout
 	if !quiet {
-		fmt.Printf("» %s\n", strings.Join(cmd.Args, " "))
+		fmt.Printf("» %s\n", strings.Join(c.Args, " "))
 	}
-	err := cmd.Run()
+	err := c.Run()
 	if err != nil {
 		if e, ok := err.(*exec.ExitError); ok {
 			code := e.ExitCode()
 			if !quiet {
-				fmt.Printf("⚠️ %s returned code %v\n", strings.Join(cmd.Args, " "), code)
+				fmt.Printf("⚠️ %s returned code %v\n", strings.Join(c.Args, " "), code)
 			}
 			return nil, code
 		} else if e, ok := err.(*exec.Error); ok {
@@ -69,9 +69,9 @@ func careFor(path string, ft ftype) error {
 	case ftYaml:
 		cmds = append(cmds, exec.Command("yamllint", path))
 	}
-	for _, cmd := range cmds {
-		if cmd != nil {
-			err, rc := runCmd(cmd)
+	for _, c := range cmds {
+		if c != nil {
+			err, rc := runCmd(c)
 			if err != nil {
 				return err
 			} else if rc != 0 && failFast {
@@ -151,16 +151,16 @@ func walkDirFunc(path string, entry fs.DirEntry, err error) error {
 		}
 		return filepath.SkipDir
 	} else if entry.IsDir() && entry.Name() == ".git" {
+		// Skip local Git repository.
 		return filepath.SkipDir
 	} else if strings.HasPrefix(entry.Name(), ".git") {
-		// NOOP
+		// Do nothing for files with .git prefix.
 	} else if !entry.IsDir() {
 		ft, err := determineFiletype(path)
 		if err != nil {
 			return err
 		}
-		err = careFor(path, ft)
-		if err != nil {
+		if err = careFor(path, ft); err != nil {
 			return err
 		}
 	}
@@ -172,10 +172,11 @@ func main() {
 	if verPrint {
 		fmt.Println(version)
 	} else if flag.NArg() < 1 {
+		// Missing path spec.
 		flag.Usage()
 	} else {
 		for _, arg := range flag.Args() {
-			// Trailing path separators interfere with depth counting
+			// Trailing path separators interfere with depth counting, strip them.
 			a := strings.TrimRight(arg, string(os.PathSeparator))
 			if err := filepath.WalkDir(a, walkDirFunc); err != nil {
 				fmt.Fprintln(os.Stderr, err)
