@@ -23,7 +23,6 @@ tasks:
     desc: Format project files.
     cmds:
       - go fmt
-      - nixfmt *.nix
 
   build:
     deps: [fmt]
